@@ -19,11 +19,11 @@ class User{
   public function __construct($data = []){
 
     if(isset($data['active'])){
-      $this->active = $data['active'];
+      $this->active = (boolean)$data['active'];
     }
 
     if(isset($data['id'])){
-      $this->id = $data['id'];
+      $this->id = intval($data['id']);
     }
 
     if(isset($data['username'])){
