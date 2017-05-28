@@ -7,8 +7,7 @@ class SSO implements SSOInterface{
 
   protected $session_key = 'inplayer_sid';
   protected $sid;
-  protected $user;
-  protected $sessionStorage;
+  protected $session;
 
   public function __construct(\Inplayer\SessionStorageInterface $sessionStorage){
 
@@ -18,10 +17,7 @@ class SSO implements SSOInterface{
     ]);
 
     $this->session = $sessionStorage;
-
-    if($this->session->get($this->session_key)){
-      $this->sid = $this->session->get($this->session_key);
-    }
+    $this->sid = $this->session->get($this->session_key);
   }
 
   /**
@@ -45,17 +41,18 @@ class SSO implements SSOInterface{
           'remember' => intval($remember)
       ]
     ]);
+
     $data = json_decode($response->getBody()->getContents(), true);
     $data = $data['response'];
 
     // check if a session id is set
     if(isset($data['result']['user_info']['session_id'])){
-      $this->sid = $data['result']['user_info']['session_id'];
-      $this->session->set('sid', $this->sid);
-      $this->fetchUser();
+      $sid = $data['result']['user_info']['session_id'];
+      $this->session->set($this->session_key, $sid);
+      $this->sid = $sid;
     }
 
-    return $this->user;
+    return $this->getUser();
   }
 
   /**
@@ -64,13 +61,16 @@ class SSO implements SSOInterface{
    */
   public function logout(){
     $response = $this->client->request('GET', 'logout', [
-      'query' => ['session_id' => $this->session->get('sid')]
+      'query' => ['session_id' => $this->sid]
     ]);
 
+    $this->destroySession();
+    return true;
+  }
+
+  protected function destroySession(){
     $this->session->destroy();
     $this->sid = null;
-    $this->user = null;
-    return true;
   }
 
   /**
@@ -78,7 +78,7 @@ class SSO implements SSOInterface{
    * @return boolean
    */
   public function isLoggedIn(){
-    if($this->getUser()){
+    if($this->sid){
       return true;
     }
     return false;
@@ -93,11 +93,13 @@ class SSO implements SSOInterface{
       return null;
     }
 
-    if(!$this->user){
-      $this->fetchUser();
+    $user = $this->fetchUser();
+
+    if(!$user){
+      $this->destroySession();
     }
 
-    return $this->user;
+    return $user;
   }
 
   /**
@@ -122,12 +124,10 @@ class SSO implements SSOInterface{
     }
 
     if($data['result']['user_info']['username'] == 'guest'){
-      $this->user = null;
       return null;
     }
 
-    $this->user = new \Inplayer\User($data['result']['user_info']);
-    return $this->user;
+    return new \Inplayer\User($data['result']['user_info']);
   }
 
   /**
@@ -136,7 +136,7 @@ class SSO implements SSOInterface{
    */
   public function get_user_info(){
     $response = $this->client->request('GET', 'get_user_info', [
-      'query' => ['session_id' => $this->sid]
+      'query' => ['session_id' => $this->session->get($this->session_key)]
     ]);
     $data = json_decode($response->getBody()->getContents(), true);
     $data = $data['response'];

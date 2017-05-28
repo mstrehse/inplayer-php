@@ -4,11 +4,14 @@ namespace Inplayer;
 class AuraSession implements \Inplayer\SessionStorageInterface{
 
   protected $segment;
+  protected $session;
 
   public function __construct($lifetime = 0){
     $session_factory = new \Aura\Session\SessionFactory;
     $session = $session_factory->newInstance($_COOKIE);
     $session->setCookieParams(array('lifetime' => $lifetime));
+
+    $this->session = $session;
     $this->segment = $session->getSegment('Inplayer\Session');
   }
 
@@ -52,7 +55,7 @@ class AuraSession implements \Inplayer\SessionStorageInterface{
    * @return void
    */
   public function destroy(){
-    $this->segment->destroy();
+    $this->session->destroy();
   }
 
 }
