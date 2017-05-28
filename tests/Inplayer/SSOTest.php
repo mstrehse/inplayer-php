@@ -27,6 +27,9 @@ class SSOTest extends TestCase{
     // check double login
     $this->assertInstanceOf(\Inplayer\User::class, $sso->login(getenv('username'), getenv('password')));
     $this->assertEquals(getenv('username'), $sso->getUser()->email);
+    $this->assertNotNull($sso->getUser()->id);
+    $this->assertNotNull($sso->getUser()->sessionId);
+    $this->assertNotNull($sso->getUser()->active);
     $this->assertTrue($sso->isLoggedIn());
 
     // check logout
