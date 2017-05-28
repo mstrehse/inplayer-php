@@ -1,0 +1,16 @@
+{
+    "name": "mstrehse/inplayer-api",
+    "type": "library",
+    "license": "MIT",
+    "minimum-stability": "dev",
+    "require": {
+        "guzzlehttp/guzzle": "^6.2",
+        "aura/session": "^2.1"
+    },
+    "autoload": {
+      "psr-4": {
+        "Inplayer\\": "src/Inplayer/",
+        "Inplayer\\Tests\\": "tests/Inplayer/"
+      }
+    }
+}

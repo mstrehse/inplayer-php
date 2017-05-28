@@ -1,0 +1,11 @@
+<phpunit bootstrap="vendor/autoload.php">
+  <testsuites>
+    <testsuite name="inplayer">
+      <directory>tests</directory>
+    </testsuite>
+  </testsuites>
+  <php>
+    <env name="username" value="username" />
+    <env name="password" value="password" />
+  </php>
+</phpunit>
