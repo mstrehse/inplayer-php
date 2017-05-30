@@ -17,7 +17,31 @@ class SSO implements SSOInterface{
     ]);
 
     $this->session = $sessionStorage;
-    $this->sid = $this->session->get($this->session_key);
+    $this->sid = $sessionStorage->get($this->session_key);
+  }
+
+  /**
+   * Returns the client
+   * @return \GuzzleHttp\Client
+   */
+  public function getClient(){
+    return $this->client;
+  }
+
+  /**
+   * Returns the session key
+   * @return string
+   */
+  public function getSessionKey(){
+    return $this->session_key();
+  }
+
+  /**
+   * Returns the session container
+   * @return \Inplayer\SessionStorageInterface
+   */
+  public function getSession(){
+    return $this->session;
   }
 
   /**
@@ -45,6 +69,10 @@ class SSO implements SSOInterface{
     $data = json_decode($response->getBody()->getContents(), true);
     $data = $data['response'];
 
+    if($data['status'] == 'error'){
+      throw new \Exception($data['message']);
+    }
+
     // check if a session id is set
     if(isset($data['result']['user_info']['session_id'])){
       $sid = $data['result']['user_info']['session_id'];
@@ -53,6 +81,41 @@ class SSO implements SSOInterface{
     }
 
     return $this->getUser();
+  }
+
+  /**
+   * Classic varient of Login a user, returns the response from the api
+   * @param string $username
+   * @param string $password
+   * @param boolean $remember
+   * @return array
+   */
+  public function login_classic($username, $password, $remember = true){
+
+    $response = $this->client->request('POST', 'login', [
+      'form_params' => [
+          'username' => $username,
+          'password' => $password,
+          'platform' => 'web',
+          'remember' => intval($remember)
+      ]
+    ]);
+
+    $data = json_decode($response->getBody()->getContents(), true);
+    $data = $data['response'];
+
+    if($data['status'] == 'error'){
+      throw new \Exception($data['message']);
+    }
+
+    // check if a session id is set
+    if(isset($data['result']['user_info']['session_id'])){
+      $sid = $data['result']['user_info']['session_id'];
+      $this->session->set($this->session_key, $sid);
+      $this->sid = $sid;
+    }
+
+    return $data;
   }
 
   /**
@@ -66,6 +129,22 @@ class SSO implements SSOInterface{
 
     $this->destroySession();
     return true;
+  }
+
+  /**
+   * Classic logout varient which returns the api data
+   * @return array
+   */
+  public function logout_classic(){
+    $response = $this->client->request('GET', 'logout', [
+      'query' => ['session_id' => $this->sid]
+    ]);
+
+    $data = json_decode($response->getBody()->getContents(), true);
+    $data = $data['response'];
+    $this->destroySession();
+
+    return $data;
   }
 
   protected function destroySession(){
@@ -136,7 +215,7 @@ class SSO implements SSOInterface{
    */
   public function get_user_info(){
     $response = $this->client->request('GET', 'get_user_info', [
-      'query' => ['session_id' => $this->session->get($this->session_key)]
+      'query' => ['session_id' => $this->sid]
     ]);
     $data = json_decode($response->getBody()->getContents(), true);
     $data = $data['response'];

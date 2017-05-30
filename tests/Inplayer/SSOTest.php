@@ -10,14 +10,20 @@ use PHPUnit\Framework\TestCase;
  */
 class SSOTest extends TestCase{
 
-  public function testLoginLogout(){
-
+  public function testWrongLogin(){
     $sessionStorage = new \Inplayer\Tests\MockSession();
     $sso = new \Inplayer\SSO($sessionStorage);
 
     // check fake login
+    $this->expectException(\Exception::class);
     $result = $sso->login('admin@example.com', 'password');
     $this->assertNull($result);
+  }
+
+  public function testLoginLogout(){
+
+    $sessionStorage = new \Inplayer\Tests\MockSession();
+    $sso = new \Inplayer\SSO($sessionStorage);
 
     // check login
     $this->assertInstanceOf(\Inplayer\User::class, $sso->login(getenv('username'), getenv('password')));
