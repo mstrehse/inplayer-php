@@ -12,6 +12,7 @@ class User{
   public $balance;
   public $country_code;
   public $roles;
+  public $language;
 
   /**
    * Constructor with data attribute
@@ -53,6 +54,10 @@ class User{
     if(isset($data['roles'])){
       $this->roles = $data['roles'];
     }
+    
+    if(isset($data['language'])){
+      $this->language = $data['language'];
+    }
   }
 
   /**
@@ -69,7 +74,8 @@ class User{
       'balance' => $this->balance,
       'currency' => $this->currency,
       'country_code' => $this->country_code,
-      'roles' => $this->roles
+      'roles' => $this->roles,
+      'language' => $this->language
     ];
   }
 }
